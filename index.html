@@ -47,30 +47,19 @@
     .iconBtn{justify-self:end;width:32px;height:32px;border:0;border-radius:10px;background:transparent;display:grid;place-items:center;cursor:pointer}
     .iconBtn:active{background:rgba(255,255,255,.08);transform:scale(.96)}
 
-    .floatingRow{
-      position:absolute;z-index:9;top:max(64px,calc(env(safe-area-inset-top) + 58px));left:12px;right:12px;
-      display:flex;justify-content:space-between;gap:8px;pointer-events:none
-    }
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:14px;
-      background:rgba(7,13,20,.64);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-      pointer-events:auto;min-height:36px
-    }
-    .pill small{display:block;font-size:10px;color:var(--muted);line-height:1}
-    .pill strong{display:block;font-size:13px;line-height:1.1}
     .gradeMark{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:900;color:#061018}
     .grade-A{background:var(--green)} .grade-B{background:var(--yellow)} .grade-C{background:var(--orange)} .grade-D{background:var(--red);color:white}
-    .chipBtn{border:0;background:transparent;padding:0}
 
     .compactPanel{
       position:absolute;z-index:10;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));
-      display:grid;gap:8px;
+      display:grid;gap:8px;transition:.2s ease;
     }
+    .compactPanel.hidden{opacity:0;transform:translateY(10px);pointer-events:none}
     .evalBar,.anglesStrip{
       border:1px solid var(--line);background:rgba(7,12,19,.54);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow)
     }
     .evalBar{
-      border-radius:16px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px
+      border-radius:16px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer
     }
     .evalMain{display:flex;align-items:center;gap:10px;min-width:0}
     .evalText{min-width:0}
@@ -78,16 +67,14 @@
     .evalSub{font-size:11px;color:#d5e2ee;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw}
     .evalMeta{font-size:10px;color:var(--muted);white-space:nowrap}
 
-    .anglesStrip{border-radius:18px;padding:8px 10px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
-    .anglesStrip::-webkit-scrollbar{display:none}
-    .angleMini{flex:0 0 auto;min-width:74px;padding:7px 10px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+    .anglesStrip{border-radius:18px;padding:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:hidden}
+    .angleMini{min-width:0;padding:7px 8px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
     .angleMiniLabel{font-size:10px;color:#d1dde8;line-height:1.1;margin-bottom:3px}
     .angleMiniValue{font-size:18px;font-weight:900;line-height:1}
     .angleMiniValue small{font-size:10px;color:#c5d3df;margin-left:1px}
     .angleMini[data-tone="green"] .angleMiniValue{color:#dfffe9}
     .angleMini[data-tone="yellow"] .angleMiniValue{color:#fff7d0}
     .angleMini[data-tone="blue"] .angleMiniValue{color:#d7f5ff}
-    .stripAction{margin-left:auto;flex:0 0 auto;border:0;background:rgba(255,255,255,.05);width:34px;height:34px;border-radius:11px;display:grid;place-items:center;cursor:pointer}
 
     .bottomBar{
       position:absolute;z-index:11;left:0;right:0;bottom:0;height:calc(82px + env(safe-area-inset-bottom));
@@ -157,11 +144,10 @@
     .startupNote{font-size:11px;color:#7f92a4;margin-top:12px;line-height:1.5}
 
     @media (max-width:390px){
-      .appTitle{font-size:16px}.topbar{height:44px}.statusText{font-size:10px}.angleMini{min-width:68px}.angleMiniValue{font-size:16px}.evalSub{max-width:62vw}
+      .appTitle{font-size:16px}.topbar{height:44px}.statusText{font-size:10px}.angleMiniValue{font-size:16px}.evalSub{max-width:62vw}
     }
     @media (orientation:landscape){
       .compactPanel{left:auto;right:14px;width:min(36vw,430px);bottom:90px}
-      .floatingRow{left:14px;right:14px}
       .bottomBar{left:50%;right:0;height:86px;padding-bottom:10px}
       .timer{bottom:88px}
     }
@@ -186,26 +172,11 @@
     </button>
   </header>
 
-  <div class="floatingRow">
-    <button id="evalBadge" class="pill chipBtn" aria-label="評価詳細を開く">
-      <span id="evalMark" class="gradeMark grade-A">A</span>
-      <span>
-        <small>簡易作業評価</small>
-        <strong id="evalShort">良好</strong>
-      </span>
-    </button>
-    <div id="poseModePill" class="pill">
-      <span>
-        <small>解析</small>
-        <strong id="poseModeText">3D World</strong>
-      </span>
-    </div>
-  </div>
 
   <div id="noPoseHint" class="noPoseHint">全身が入るように映してください</div>
 
-  <section class="compactPanel">
-    <div class="evalBar">
+  <section id="compactPanel" class="compactPanel hidden">
+    <div id="detailBtn" class="evalBar" role="button" tabindex="0" aria-label="解析詳細を開く">
       <div class="evalMain">
         <span id="evalBarMark" class="gradeMark grade-A">A</span>
         <div class="evalText">
@@ -223,9 +194,6 @@
       <div class="angleMini" data-tone="yellow"><div class="angleMiniLabel">右膝</div><div class="angleMiniValue" data-angle="rightKnee">--<small>°</small></div></div>
       <div class="angleMini" data-tone="blue"><div class="angleMiniLabel">左股関節</div><div class="angleMiniValue" data-angle="leftHip">--<small>°</small></div></div>
       <div class="angleMini" data-tone="blue"><div class="angleMiniLabel">右股関節</div><div class="angleMiniValue" data-angle="rightHip">--<small>°</small></div></div>
-      <button id="detailBtn" class="stripAction" aria-label="詳細を開く">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10h8M8 14h8"/><path d="M5 6h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
-      </button>
     </div>
   </section>
 
@@ -376,9 +344,7 @@ const detailSheet = document.getElementById('detailSheet');
 const closeSettings = document.getElementById('closeSettings');
 const closeDetail = document.getElementById('closeDetail');
 const detailBtn = document.getElementById('detailBtn');
-const evalBadge = document.getElementById('evalBadge');
-const evalMark = document.getElementById('evalMark');
-const evalShort = document.getElementById('evalShort');
+const compactPanel = document.getElementById('compactPanel');
 const evalBarMark = document.getElementById('evalBarMark');
 const evalBarTitle = document.getElementById('evalBarTitle');
 const evalBarSub = document.getElementById('evalBarSub');
@@ -619,9 +585,8 @@ function updateAngleCards(angles){
 
 function updateEvaluationUI(evaluation){
   latestEval = evaluation;
-  const targets = [evalMark, evalBarMark, detailEvalMark];
+  const targets = [evalBarMark, detailEvalMark];
   targets.forEach(el => { el.className = `gradeMark ${gradeClass(evaluation.grade)}`; el.textContent = evaluation.grade; });
-  evalShort.textContent = evaluation.title;
   evalBarTitle.textContent = `作業評価：${evaluation.title}`;
   evalBarSub.textContent = evaluation.detail;
   detailEvalTitle.textContent = `${evaluation.title}（スコア ${evaluation.score}）`;
@@ -863,7 +828,6 @@ async function startApp(){
     sessionStartedAt = performance.now();
     startup.classList.add('hide');
     setLive(true, '解析中');
-    document.getElementById('poseModeText').textContent = `3D World ・ ${delegateUsed}`;
     showToast(`MediaPipe起動完了（${delegateUsed}）`);
     requestAnimationFrame(predictLoop);
   }catch(err){
@@ -915,6 +879,17 @@ function updateFps(now){
   }
 }
 
+function clearPoseDisplay(){
+  lastResult = null;
+  latestAngles = {};
+  smoothedAngles = {};
+  latestMetrics = null;
+  lastCompletedPose = null;
+  updateAngleCards({});
+  compactPanel.classList.add('hidden');
+  drawOverlay();
+}
+
 function predictLoop(now){
   if(!running) return;
   try{
@@ -931,9 +906,13 @@ function predictLoop(now){
         updateEvaluationUI(latestMetrics);
         maybeRecordCsv(now, pose.world, latestAngles, latestMetrics);
         lastResult = { pose };
+        compactPanel.classList.remove('hidden');
         noPoseHint.classList.remove('show');
       }else{
-        if(now - lastPoseSeenAt > 700) noPoseHint.classList.add('show');
+        if(now - lastPoseSeenAt > 500){
+          noPoseHint.classList.add('show');
+          clearPoseDisplay();
+        }
       }
       drawOverlay();
       updateFps(now);
@@ -1059,7 +1038,7 @@ closeSettings.addEventListener('click', closeSettingsSheet);
 settingsSheet.addEventListener('click', e => { if(e.target === settingsSheet) closeSettingsSheet(); });
 
 detailBtn.addEventListener('click', openDetail);
-evalBadge.addEventListener('click', openDetail);
+detailBtn.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') openDetail(); });
 closeDetail.addEventListener('click', closeDetailSheet);
 detailSheet.addEventListener('click', e => { if(e.target === detailSheet) closeDetailSheet(); });
 
