@@ -6,159 +6,164 @@
   <meta name="theme-color" content="#071018" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>姿勢解析カメラ</title>
+  <title>作業姿勢解析</title>
   <style>
     :root{
       --bg:#071018;
-      --panel:rgba(11,19,28,.78);
-      --panel2:rgba(19,29,40,.72);
-      --line:rgba(255,255,255,.12);
+      --panel:rgba(10,16,24,.74);
+      --panel-strong:rgba(8,12,18,.90);
+      --panel-soft:rgba(10,16,24,.58);
+      --line:rgba(255,255,255,.10);
       --text:#f7fbff;
-      --muted:#a9b7c5;
+      --muted:#9db0c2;
       --cyan:#53d8ff;
       --blue:#4f8cff;
       --green:#65f29a;
       --yellow:#ffd95a;
-      --red:#ff3b30;
+      --orange:#ff9f43;
+      --red:#ff4d4f;
       --shadow:0 14px 40px rgba(0,0,0,.34);
     }
-
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{width:100%;height:100%;margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;color:var(--text);overflow:hidden}
     button{font:inherit;color:inherit}
 
-    #app{
-      position:fixed;inset:0;overflow:hidden;background:#02070b;
-    }
-
-    #cameraStage{
-      position:absolute;inset:0;
-      background:
-        radial-gradient(circle at 50% 25%,rgba(45,91,120,.20),transparent 40%),
-        linear-gradient(180deg,#101922,#05090d 70%);
-    }
-
-    #video{
-      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-      background:#03070b;
-    }
-
-    #overlay{
-      position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
-    }
-
-    .shade{
-      position:absolute;inset:0;pointer-events:none;
-      background:linear-gradient(180deg,rgba(0,0,0,.38) 0%,transparent 18%,transparent 55%,rgba(0,0,0,.22) 67%,rgba(0,0,0,.70) 100%);
-    }
+    #app{position:fixed;inset:0;overflow:hidden;background:#02070b}
+    #cameraStage{position:absolute;inset:0;background:radial-gradient(circle at 50% 24%,rgba(55,100,136,.18),transparent 40%),linear-gradient(180deg,#101922,#05090d 70%)}
+    #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#03070b}
+    #overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34),transparent 18%,transparent 62%,rgba(0,0,0,.08) 72%,rgba(0,0,0,.68) 100%);pointer-events:none}
 
     .topbar{
-      position:absolute;
-      top:max(12px,calc(env(safe-area-inset-top) + 8px));
-      left:12px;right:12px;height:58px;
-      display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
-      border:1px solid var(--line);border-radius:18px;
-      background:rgba(6,13,20,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-      box-shadow:var(--shadow);z-index:5;padding:0 14px;
+      position:absolute;z-index:10;top:max(10px,calc(env(safe-area-inset-top) + 6px));left:12px;right:12px;height:46px;
+      display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 10px;
+      border:1px solid var(--line);border-radius:16px;background:rgba(6,11,18,.60);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow)
     }
-    .live{display:flex;align-items:center;gap:8px;font-weight:750;font-size:13px;white-space:nowrap}
-    .liveDot{width:9px;height:9px;border-radius:999px;background:#5d6872;box-shadow:0 0 0 0 rgba(101,242,154,.0)}
-    .live.active .liveDot{background:var(--green);box-shadow:0 0 0 5px rgba(101,242,154,.12)}
-    .live.active{color:var(--green)}
-    .title{font-size:18px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
-    .iconBtn{justify-self:end;width:38px;height:38px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;cursor:pointer}
-    .iconBtn:active{background:rgba(255,255,255,.09);transform:scale(.96)}
+    .statusWrap{display:flex;align-items:center;gap:8px;min-width:0}
+    .liveDot{width:8px;height:8px;border-radius:50%;background:#61717f;flex:none}
+    .liveDot.active{background:var(--green);box-shadow:0 0 0 5px rgba(101,242,154,.12)}
+    .statusText{font-size:11px;font-weight:800;letter-spacing:.03em;color:#d2deea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .appTitle{font-size:17px;font-weight:850;letter-spacing:.03em;white-space:nowrap}
+    .iconBtn{justify-self:end;width:32px;height:32px;border:0;border-radius:10px;background:transparent;display:grid;place-items:center;cursor:pointer}
+    .iconBtn:active{background:rgba(255,255,255,.08);transform:scale(.96)}
 
-    .badge{
-      position:absolute;z-index:4;right:14px;top:max(82px,calc(env(safe-area-inset-top) + 78px));
-      display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:14px;
-      background:rgba(12,20,30,.67);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      border:1px solid var(--line);font-size:12px;font-weight:750;color:#dfeeff;
+    .floatingRow{
+      position:absolute;z-index:9;top:max(64px,calc(env(safe-area-inset-top) + 58px));left:12px;right:12px;
+      display:flex;justify-content:space-between;gap:8px;pointer-events:none
     }
-    .cube{width:20px;height:20px;border:1.6px solid var(--cyan);transform:rotate(30deg);border-radius:2px;opacity:.9}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:14px;
+      background:rgba(7,13,20,.64);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      pointer-events:auto;min-height:36px
+    }
+    .pill small{display:block;font-size:10px;color:var(--muted);line-height:1}
+    .pill strong{display:block;font-size:13px;line-height:1.1}
+    .gradeMark{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:900;color:#061018}
+    .grade-A{background:var(--green)} .grade-B{background:var(--yellow)} .grade-C{background:var(--orange)} .grade-D{background:var(--red);color:white}
+    .chipBtn{border:0;background:transparent;padding:0}
 
-    .statsPanel{
-      position:absolute;z-index:5;left:12px;right:12px;
-      bottom:calc(132px + env(safe-area-inset-bottom));
-      background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-      border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--shadow);
-      transition:.22s ease;
+    .compactPanel{
+      position:absolute;z-index:10;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));
+      display:grid;gap:8px;
     }
-    .statsPanel.hidden{opacity:0;transform:translateY(16px);pointer-events:none}
-    .panelHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-    .panelTitle{font-size:14px;font-weight:800}
-    .panelMeta{font-size:11px;color:var(--muted)}
-    .angleGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-    .angleCard{min-width:0;padding:8px 8px 9px 11px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035);border-radius:12px;position:relative;overflow:hidden}
-    .angleCard::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:999px;background:var(--cyan)}
-    .angleCard[data-tone="green"]::before{background:var(--green)}
-    .angleCard[data-tone="yellow"]::before{background:var(--yellow)}
-    .angleLabel{font-size:10px;color:#cbd6e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .angleValue{margin-top:2px;font-weight:850;font-size:20px;line-height:1;letter-spacing:-.02em}
-    .angleValue small{font-size:11px;color:#d7e2ed;margin-left:2px}
+    .evalBar,.anglesStrip{
+      border:1px solid var(--line);background:rgba(7,12,19,.54);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow)
+    }
+    .evalBar{
+      border-radius:16px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px
+    }
+    .evalMain{display:flex;align-items:center;gap:10px;min-width:0}
+    .evalText{min-width:0}
+    .evalTitle{font-size:12px;font-weight:850;line-height:1.1}
+    .evalSub{font-size:11px;color:#d5e2ee;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw}
+    .evalMeta{font-size:10px;color:var(--muted);white-space:nowrap}
 
-    .toggleRow{
-      position:absolute;z-index:5;bottom:calc(95px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-      display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:999px;background:rgba(7,13,20,.78);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)
-    }
-    .toggleBtn{border:0;background:transparent;display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer}
-    .switch{width:31px;height:18px;border-radius:999px;background:#4f5a65;position:relative;transition:.2s}
-    .switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:white;transition:.2s}
-    .toggleBtn.on .switch{background:var(--blue)}
-    .toggleBtn.on .switch::after{transform:translateX(13px)}
+    .anglesStrip{border-radius:18px;padding:8px 10px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+    .anglesStrip::-webkit-scrollbar{display:none}
+    .angleMini{flex:0 0 auto;min-width:74px;padding:7px 10px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+    .angleMiniLabel{font-size:10px;color:#d1dde8;line-height:1.1;margin-bottom:3px}
+    .angleMiniValue{font-size:18px;font-weight:900;line-height:1}
+    .angleMiniValue small{font-size:10px;color:#c5d3df;margin-left:1px}
+    .angleMini[data-tone="green"] .angleMiniValue{color:#dfffe9}
+    .angleMini[data-tone="yellow"] .angleMiniValue{color:#fff7d0}
+    .angleMini[data-tone="blue"] .angleMiniValue{color:#d7f5ff}
+    .stripAction{margin-left:auto;flex:0 0 auto;border:0;background:rgba(255,255,255,.05);width:34px;height:34px;border-radius:11px;display:grid;place-items:center;cursor:pointer}
 
     .bottomBar{
-      position:absolute;z-index:6;left:0;right:0;bottom:0;height:calc(88px + env(safe-area-inset-bottom));
-      padding:8px 24px calc(10px + env(safe-area-inset-bottom));
-      display:grid;grid-template-columns:1fr 1.1fr 1fr;align-items:end;
-      background:linear-gradient(180deg,transparent,rgba(3,7,11,.68) 28%,rgba(3,7,11,.90));
+      position:absolute;z-index:11;left:0;right:0;bottom:0;height:calc(82px + env(safe-area-inset-bottom));
+      display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;padding:8px 22px calc(10px + env(safe-area-inset-bottom));
+      background:linear-gradient(180deg,transparent,rgba(3,7,11,.62) 24%,rgba(3,7,11,.92))
     }
     .action{justify-self:center;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:68px}
     .actionCircle{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.72);background:rgba(13,20,28,.54);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-    .action span{font-size:11px;font-weight:700}
+    .action span{font-size:11px;font-weight:800}
     .record .actionCircle{width:62px;height:62px;border:4px solid white;box-shadow:0 0 0 2px rgba(255,255,255,.16);background:transparent;padding:5px}
     .recordCore{width:100%;height:100%;border-radius:50%;background:var(--red);transition:.2s}
     .record.recording .recordCore{border-radius:10px;transform:scale(.62)}
     .action:active .actionCircle{transform:scale(.94)}
 
-    .timer{
-      position:absolute;z-index:7;right:18px;bottom:calc(89px + env(safe-area-inset-bottom));
-      padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(5,9,14,.80);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      display:none;align-items:center;gap:7px;font-size:11px;font-variant-numeric:tabular-nums;
-    }
+    .timer{position:absolute;z-index:12;right:16px;bottom:calc(78px + env(safe-area-inset-bottom));padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(5,9,14,.84);display:none;align-items:center;gap:7px;font-size:11px;font-variant-numeric:tabular-nums;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .timer.visible{display:flex}.recDot{width:7px;height:7px;border-radius:50%;background:var(--red)}
 
-    .startup{
-      position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 30%,rgba(34,84,119,.28),transparent 40%),linear-gradient(180deg,#07111a,#02070b);
-      transition:.28s ease;
-    }
-    .startup.hide{opacity:0;pointer-events:none}
-    .startCard{max-width:420px;width:100%;padding:24px 20px 20px;border:1px solid var(--line);border-radius:24px;background:rgba(11,18,27,.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow);text-align:center}
-    .startLogo{width:72px;height:72px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(83,216,255,.18),rgba(79,140,255,.12));border:1px solid rgba(83,216,255,.28)}
-    .startCard h1{font-size:22px;margin:0 0 7px}.startCard p{font-size:13px;line-height:1.65;color:var(--muted);margin:0 0 18px}
-    .startBtn{width:100%;border:0;border-radius:14px;padding:14px 16px;background:linear-gradient(135deg,#43cfff,#4b82ff);font-weight:850;color:white;box-shadow:0 10px 26px rgba(55,142,255,.28);cursor:pointer}
-    .startBtn:disabled{opacity:.55;cursor:default}.note{font-size:10px!important;color:#788898!important;margin-top:10px!important;margin-bottom:0!important}
+    .noPoseHint{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);padding:9px 12px;border-radius:12px;background:rgba(6,13,20,.60);border:1px solid var(--line);font-size:12px;color:#d8e6f2;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
+    .noPoseHint.show{opacity:1}
 
     .toast{position:absolute;z-index:30;left:50%;top:92px;transform:translate(-50%,-12px);max-width:calc(100% - 34px);padding:10px 14px;border:1px solid var(--line);background:rgba(8,14,21,.90);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:12px;font-size:12px;font-weight:700;opacity:0;pointer-events:none;transition:.22s;box-shadow:var(--shadow);text-align:center}
     .toast.show{opacity:1;transform:translate(-50%,0)}
 
-    .settingsSheet{position:absolute;z-index:25;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end}
-    .settingsSheet.show{display:flex}
-    .sheet{width:100%;background:#0b141e;border-radius:24px 24px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--line);box-shadow:0 -20px 50px rgba(0,0,0,.38)}
+    .sheetWrap{position:absolute;z-index:45;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end}
+    .sheetWrap.show{display:flex}
+    .sheet{width:100%;background:#0b141e;border-radius:24px 24px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--line);box-shadow:0 -20px 50px rgba(0,0,0,.38);max-height:min(82vh,760px);overflow:auto}
     .grabber{width:42px;height:4px;border-radius:999px;background:#44515e;margin:0 auto 14px}.sheet h2{font-size:18px;margin:0 0 4px}.sheetSub{font-size:11px;color:var(--muted);margin-bottom:16px}
-    .settingItem{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
+    .sheetGroup{margin-top:16px}
+    .groupTitle{font-size:12px;font-weight:900;color:#cfe0ef;margin-bottom:8px}
+    .settingItem{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);gap:16px}
     .settingText b{font-size:13px}.settingText div{font-size:10px;color:var(--muted);margin-top:3px}
-    .seg{display:flex;background:#121e29;border-radius:10px;padding:3px}.seg button{border:0;background:transparent;border-radius:8px;padding:7px 10px;color:var(--muted);font-size:11px;font-weight:800}.seg button.active{background:#243647;color:white}
-    .closeSheet{margin-top:14px;width:100%;border:1px solid var(--line);background:#14212d;border-radius:13px;padding:12px;font-weight:800}
+    .seg{display:flex;background:#121e29;border-radius:10px;padding:3px}.seg button{border:0;background:transparent;border-radius:8px;padding:7px 10px;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer}.seg button.active{background:#243647;color:white}
+    .listBtn{width:100%;border:1px solid rgba(255,255,255,.09);background:#101925;border-radius:14px;padding:14px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;color:white;cursor:pointer}
+    .listBtn + .listBtn{margin-top:8px}
+    .listBtn small{display:block;color:var(--muted);margin-top:3px;font-size:10px}
+    .switchBtn{display:flex;align-items:center;gap:8px;background:transparent;border:0;cursor:pointer}
+    .switch{width:34px;height:20px;border-radius:999px;background:#4f5a65;position:relative;transition:.2s;flex:none}
+    .switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:white;transition:.2s}
+    .switchBtn.on .switch{background:var(--blue)}
+    .switchBtn.on .switch::after{transform:translateX(14px)}
+    .closeSheet{margin-top:18px;width:100%;border:1px solid var(--line);background:#14212d;border-radius:13px;padding:12px;font-weight:800;cursor:pointer}
 
-    .noPoseHint{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 13px;border-radius:12px;background:rgba(6,13,20,.60);border:1px solid var(--line);font-size:12px;color:#d8e6f2;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
-    .noPoseHint.show{opacity:1}
+    .detailGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .detailCard{padding:11px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#101925}
+    .detailCard b{display:block;font-size:11px;color:#d6e3ef;margin-bottom:4px}
+    .detailCard div{font-size:22px;font-weight:900}
+    .detailCard small{font-size:11px;color:var(--muted)}
+    .summaryBox{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#101925;margin-bottom:10px}
+    .summaryTop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .summaryText{font-size:13px;font-weight:800}
+    .summarySub{font-size:11px;color:#d5e2ee;line-height:1.45}
+    .summaryNote{font-size:10px;color:var(--muted);margin-top:7px}
+
+    .startup{
+      position:absolute;z-index:40;inset:0;display:grid;place-items:center;padding:24px;
+      background:radial-gradient(circle at 50% 30%,rgba(34,84,119,.28),transparent 42%),linear-gradient(180deg,#07111a,#02070b);transition:.28s ease
+    }
+    .startup.hide{opacity:0;pointer-events:none}
+    .startCard{width:min(430px,100%);padding:28px 24px 22px;border:1px solid var(--line);border-radius:28px;background:rgba(9,15,23,.84);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow)}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:#89cfff;text-transform:uppercase;margin-bottom:14px}
+    .startTitle{font-size:32px;font-weight:950;letter-spacing:.04em;line-height:1.1;margin:0}
+    .startSub{margin-top:6px;font-size:13px;color:#c6d5e4;letter-spacing:.06em}
+    .heroLine{height:1px;background:linear-gradient(90deg,transparent,rgba(83,216,255,.5),transparent);margin:24px 0 18px}
+    .startActions{display:grid;gap:10px}
+    .primaryBtn{border:0;border-radius:16px;padding:15px 16px;background:linear-gradient(135deg,#43cfff,#4b82ff);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 10px 26px rgba(55,142,255,.28)}
+    .secondaryBtn{border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:13px 16px;background:rgba(255,255,255,.04);color:#dbe9f5;font-weight:800;cursor:pointer}
+    .startupNote{font-size:11px;color:#7f92a4;margin-top:12px;line-height:1.5}
 
     @media (max-width:390px){
-      .topbar{height:54px}.title{font-size:16px}.live{font-size:11px}.angleValue{font-size:18px}.statsPanel{bottom:calc(128px + env(safe-area-inset-bottom))}.toggleRow{bottom:calc(92px + env(safe-area-inset-bottom))}
+      .appTitle{font-size:16px}.topbar{height:44px}.statusText{font-size:10px}.angleMini{min-width:68px}.angleMiniValue{font-size:16px}.evalSub{max-width:62vw}
     }
     @media (orientation:landscape){
-      .statsPanel{left:auto;width:42%;bottom:88px}.toggleRow{left:24%;bottom:16px}.bottomBar{left:50%;height:88px;padding-bottom:10px}.timer{bottom:90px}.badge{top:80px}
+      .compactPanel{left:auto;right:14px;width:min(36vw,430px);bottom:90px}
+      .floatingRow{left:14px;right:14px}
+      .bottomBar{left:50%;right:0;height:86px;padding-bottom:10px}
+      .timer{bottom:88px}
     }
   </style>
 </head>
@@ -171,32 +176,58 @@
   </div>
 
   <header class="topbar">
-    <div id="liveStatus" class="live"><span class="liveDot"></span><span id="liveText">準備中</span></div>
-    <div class="title">姿勢解析カメラ</div>
+    <div class="statusWrap">
+      <span id="liveDot" class="liveDot"></span>
+      <span id="liveText" class="statusText">待機中</span>
+    </div>
+    <div class="appTitle">作業姿勢解析</div>
     <button id="settingsBtn" class="iconBtn" aria-label="設定">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2V9.6h.4A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 9.9 2H14v.4A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 8.5c.18.38.5.7.9.9.34.16.72.22 1.1.2h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2V9.6h.4A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 9.9 2H14v.4A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 8.5c.18.38.5.7.9.9.34.16.72.22 1.1.2h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>
     </button>
   </header>
 
-  <div class="badge"><span class="cube"></span><span>3D World角度</span></div>
+  <div class="floatingRow">
+    <button id="evalBadge" class="pill chipBtn" aria-label="評価詳細を開く">
+      <span id="evalMark" class="gradeMark grade-A">A</span>
+      <span>
+        <small>簡易作業評価</small>
+        <strong id="evalShort">良好</strong>
+      </span>
+    </button>
+    <div id="poseModePill" class="pill">
+      <span>
+        <small>解析</small>
+        <strong id="poseModeText">3D World</strong>
+      </span>
+    </div>
+  </div>
+
   <div id="noPoseHint" class="noPoseHint">全身が入るように映してください</div>
 
-  <section id="statsPanel" class="statsPanel">
-    <div class="panelHead"><div class="panelTitle">関節の角度（3D解析）</div><div id="fpsText" class="panelMeta">-- FPS ・ 度(°)</div></div>
-    <div class="angleGrid">
-      <div class="angleCard" data-tone="green"><div class="angleLabel">左肘</div><div class="angleValue" data-angle="leftElbow">--<small>°</small></div></div>
-      <div class="angleCard" data-tone="green"><div class="angleLabel">右肘</div><div class="angleValue" data-angle="rightElbow">--<small>°</small></div></div>
-      <div class="angleCard" data-tone="yellow"><div class="angleLabel">左膝</div><div class="angleValue" data-angle="leftKnee">--<small>°</small></div></div>
-      <div class="angleCard" data-tone="yellow"><div class="angleLabel">右膝</div><div class="angleValue" data-angle="rightKnee">--<small>°</small></div></div>
-      <div class="angleCard"><div class="angleLabel">左股関節</div><div class="angleValue" data-angle="leftHip">--<small>°</small></div></div>
-      <div class="angleCard"><div class="angleLabel">右股関節</div><div class="angleValue" data-angle="rightHip">--<small>°</small></div></div>
+  <section class="compactPanel">
+    <div class="evalBar">
+      <div class="evalMain">
+        <span id="evalBarMark" class="gradeMark grade-A">A</span>
+        <div class="evalText">
+          <div id="evalBarTitle" class="evalTitle">作業評価：良好</div>
+          <div id="evalBarSub" class="evalSub">姿勢が安定しています</div>
+        </div>
+      </div>
+      <div id="fpsText" class="evalMeta">-- FPS</div>
+    </div>
+
+    <div id="anglesStrip" class="anglesStrip">
+      <div class="angleMini" data-tone="green"><div class="angleMiniLabel">左肘</div><div class="angleMiniValue" data-angle="leftElbow">--<small>°</small></div></div>
+      <div class="angleMini" data-tone="green"><div class="angleMiniLabel">右肘</div><div class="angleMiniValue" data-angle="rightElbow">--<small>°</small></div></div>
+      <div class="angleMini" data-tone="yellow"><div class="angleMiniLabel">左膝</div><div class="angleMiniValue" data-angle="leftKnee">--<small>°</small></div></div>
+      <div class="angleMini" data-tone="yellow"><div class="angleMiniLabel">右膝</div><div class="angleMiniValue" data-angle="rightKnee">--<small>°</small></div></div>
+      <div class="angleMini" data-tone="blue"><div class="angleMiniLabel">左股関節</div><div class="angleMiniValue" data-angle="leftHip">--<small>°</small></div></div>
+      <div class="angleMini" data-tone="blue"><div class="angleMiniLabel">右股関節</div><div class="angleMiniValue" data-angle="rightHip">--<small>°</small></div></div>
+      <button id="detailBtn" class="stripAction" aria-label="詳細を開く">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10h8M8 14h8"/><path d="M5 6h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
+      </button>
     </div>
   </section>
-
-  <div class="toggleRow">
-    <button id="skeletonToggle" class="toggleBtn on"><span>骨格</span><span class="switch"></span></button>
-    <button id="labelsToggle" class="toggleBtn on"><span>数値</span><span class="switch"></span></button>
-  </div>
 
   <div id="recordTimer" class="timer"><span class="recDot"></span><span id="timerText">00:00</span></div>
 
@@ -205,37 +236,107 @@
       <span class="actionCircle"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h3l1.4-2h7.2L17 7h3v12H4Z"/><circle cx="12" cy="13" r="4"/></svg></span><span>写真</span>
     </button>
     <button id="recordBtn" class="action record" aria-label="録画"><span class="actionCircle"><span class="recordCore"></span></span><span id="recordLabel">録画</span></button>
-    <button id="csvBtn" class="action" aria-label="CSV出力">
-      <span class="actionCircle"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v5h5"/><path d="M8 12h8M8 16h8"/></svg></span><span>CSV</span>
+    <button id="menuBtn" class="action" aria-label="メニュー">
+      <span class="actionCircle"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span><span>メニュー</span>
     </button>
   </nav>
 
-  <div id="startup" class="startup">
-    <div class="startCard">
-      <div class="startLogo"><svg width="39" height="39" viewBox="0 0 24 24" fill="none" stroke="#63dfff" stroke-width="1.8"><circle cx="12" cy="4" r="2"/><path d="M12 6v5m0 0-4 4m4-4 4 4M8 9l4 2 4-2M8 15l-2 6m10-6 2 6"/></svg></div>
-      <h1>姿勢解析カメラ</h1>
-      <p>背面カメラで人体を検出し、MediaPipeの3D World座標から関節角度をリアルタイム算出します。</p>
-      <button id="startBtn" class="startBtn">カメラを開始</button>
-      <p id="startupStatus" class="note">初回はAIモデルを読み込みます。カメラ映像の解析は端末上で行われます。</p>
+  <div id="toast" class="toast"></div>
+
+  <div id="settingsSheet" class="sheetWrap">
+    <div class="sheet">
+      <div class="grabber"></div>
+      <h2>メニュー</h2>
+      <div class="sheetSub">表示の切替・CSV保存・解析設定</div>
+
+      <div class="sheetGroup">
+        <div class="groupTitle">保存</div>
+        <button id="sheetPhotoBtn" class="listBtn">
+          <span><b>写真を保存</b><small>映像＋骨格＋角度付き</small></span>
+          <span>📷</span>
+        </button>
+        <button id="sheetCsvBtn" class="listBtn">
+          <span><b>CSVを保存</b><small>角度の時系列データを書き出し</small></span>
+          <span>CSV</span>
+        </button>
+      </div>
+
+      <div class="sheetGroup">
+        <div class="groupTitle">表示</div>
+        <div class="settingItem">
+          <div class="settingText"><b>骨格表示</b><div>人体のラインと関節点を描画</div></div>
+          <button id="skeletonToggle" class="switchBtn on"><span class="switch"></span></button>
+        </div>
+        <div class="settingItem">
+          <div class="settingText"><b>角度ラベル</b><div>画面上の角度数値を表示</div></div>
+          <button id="labelsToggle" class="switchBtn on"><span class="switch"></span></button>
+        </div>
+      </div>
+
+      <div class="sheetGroup">
+        <div class="groupTitle">解析</div>
+        <div class="settingItem">
+          <div class="settingText"><b>角度の平滑化</b><div>数値の細かな揺れを抑えます</div></div>
+          <div id="smoothSeg" class="seg"><button data-v="0.15">強</button><button data-v="0.28" class="active">標準</button><button data-v="0.5">弱</button></div>
+        </div>
+        <div class="settingItem">
+          <div class="settingText"><b>CSVサンプリング</b><div>履歴の保存間隔</div></div>
+          <div id="csvSeg" class="seg"><button data-v="200">5Hz</button><button data-v="100" class="active">10Hz</button><button data-v="50">20Hz</button></div>
+        </div>
+      </div>
+
+      <button id="closeSettings" class="closeSheet">閉じる</button>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-
-  <div id="settingsSheet" class="settingsSheet">
+  <div id="detailSheet" class="sheetWrap">
     <div class="sheet">
       <div class="grabber"></div>
-      <h2>表示・記録設定</h2>
-      <div class="sheetSub">角度計算は常に3D World座標を使用します。</div>
-      <div class="settingItem">
-        <div class="settingText"><b>角度の平滑化</b><div>数値の細かな揺れを抑えます</div></div>
-        <div id="smoothSeg" class="seg"><button data-v="0.15">強</button><button data-v="0.28" class="active">標準</button><button data-v="0.5">弱</button></div>
+      <h2>解析詳細</h2>
+      <div class="sheetSub">3D World座標ベース・簡易作業評価</div>
+
+      <div class="summaryBox">
+        <div class="summaryTop">
+          <span id="detailEvalMark" class="gradeMark grade-A">A</span>
+          <div class="summaryText" id="detailEvalTitle">良好</div>
+        </div>
+        <div class="summarySub" id="detailEvalSub">姿勢が安定しています</div>
+        <div class="summaryNote">※ 評価は角度ベースの簡易ロジックです。OSHMSそのものではなく、姿勢負荷の目安として使ってください。</div>
       </div>
-      <div class="settingItem">
-        <div class="settingText"><b>CSVサンプリング</b><div>計測中の履歴を端末内に保持</div></div>
-        <div id="csvSeg" class="seg"><button data-v="200">5Hz</button><button data-v="100" class="active">10Hz</button><button data-v="50">20Hz</button></div>
+
+      <div class="groupTitle">主要角度</div>
+      <div class="detailGrid">
+        <div class="detailCard"><b>左肘</b><div data-angle-detail="leftElbow">--°</div><small>肩→肘→手首</small></div>
+        <div class="detailCard"><b>右肘</b><div data-angle-detail="rightElbow">--°</div><small>肩→肘→手首</small></div>
+        <div class="detailCard"><b>左膝</b><div data-angle-detail="leftKnee">--°</div><small>腰→膝→足首</small></div>
+        <div class="detailCard"><b>右膝</b><div data-angle-detail="rightKnee">--°</div><small>腰→膝→足首</small></div>
+        <div class="detailCard"><b>左股関節</b><div data-angle-detail="leftHip">--°</div><small>肩→腰→膝</small></div>
+        <div class="detailCard"><b>右股関節</b><div data-angle-detail="rightHip">--°</div><small>肩→腰→膝</small></div>
       </div>
-      <button id="closeSettings" class="closeSheet">閉じる</button>
+
+      <div class="groupTitle" style="margin-top:16px">評価指標</div>
+      <div class="detailGrid">
+        <div class="detailCard"><b>体幹前傾</b><div id="metricTrunk">--°</div><small>肩中心と腰中心から算出</small></div>
+        <div class="detailCard"><b>腕上げ</b><div id="metricArm">--°</div><small>左右の大きい方を表示</small></div>
+        <div class="detailCard"><b>膝屈曲</b><div id="metricKnee">--°</div><small>左右の大きい方を表示</small></div>
+        <div class="detailCard"><b>補完ランドマーク</b><div id="metricCompletion">0</div><small>見切れ・低信頼点を補完</small></div>
+      </div>
+
+      <button id="closeDetail" class="closeSheet">閉じる</button>
+    </div>
+  </div>
+
+  <div id="startup" class="startup">
+    <div class="startCard">
+      <div class="eyebrow">WORK POSTURE</div>
+      <h1 class="startTitle">作業姿勢解析</h1>
+      <div class="startSub">REALTIME CAMERA ANALYSIS</div>
+      <div class="heroLine"></div>
+      <div class="startActions">
+        <button id="startBtn" class="primaryBtn">解析を開始</button>
+        <button id="startupSettingsBtn" class="secondaryBtn">設定</button>
+      </div>
+      <div id="startupStatus" class="startupNote">初回のみモデルを読み込みます</div>
     </div>
   </div>
 
@@ -253,26 +354,41 @@ const overlay = document.getElementById('overlay');
 const octx = overlay.getContext('2d');
 const captureCanvas = document.getElementById('captureCanvas');
 const cctx = captureCanvas.getContext('2d');
+
 const startup = document.getElementById('startup');
 const startBtn = document.getElementById('startBtn');
+const startupSettingsBtn = document.getElementById('startupSettingsBtn');
 const startupStatus = document.getElementById('startupStatus');
-const liveStatus = document.getElementById('liveStatus');
+const settingsBtn = document.getElementById('settingsBtn');
+const menuBtn = document.getElementById('menuBtn');
+const liveDot = document.getElementById('liveDot');
 const liveText = document.getElementById('liveText');
 const noPoseHint = document.getElementById('noPoseHint');
 const fpsText = document.getElementById('fpsText');
-const statsPanel = document.getElementById('statsPanel');
-const skeletonToggle = document.getElementById('skeletonToggle');
-const labelsToggle = document.getElementById('labelsToggle');
 const photoBtn = document.getElementById('photoBtn');
+const sheetPhotoBtn = document.getElementById('sheetPhotoBtn');
 const recordBtn = document.getElementById('recordBtn');
 const recordLabel = document.getElementById('recordLabel');
-const csvBtn = document.getElementById('csvBtn');
 const recordTimer = document.getElementById('recordTimer');
 const timerText = document.getElementById('timerText');
-const settingsBtn = document.getElementById('settingsBtn');
 const settingsSheet = document.getElementById('settingsSheet');
+const detailSheet = document.getElementById('detailSheet');
 const closeSettings = document.getElementById('closeSettings');
+const closeDetail = document.getElementById('closeDetail');
+const detailBtn = document.getElementById('detailBtn');
+const evalBadge = document.getElementById('evalBadge');
+const evalMark = document.getElementById('evalMark');
+const evalShort = document.getElementById('evalShort');
+const evalBarMark = document.getElementById('evalBarMark');
+const evalBarTitle = document.getElementById('evalBarTitle');
+const evalBarSub = document.getElementById('evalBarSub');
+const detailEvalMark = document.getElementById('detailEvalMark');
+const detailEvalTitle = document.getElementById('detailEvalTitle');
+const detailEvalSub = document.getElementById('detailEvalSub');
 const toast = document.getElementById('toast');
+const skeletonToggle = document.getElementById('skeletonToggle');
+const labelsToggle = document.getElementById('labelsToggle');
+const sheetCsvBtn = document.getElementById('sheetCsvBtn');
 
 let landmarker = null;
 let cameraStream = null;
@@ -285,6 +401,8 @@ let lastVideoTime = -1;
 let lastInferenceStamp = -1;
 let lastResult = null;
 let latestAngles = {};
+let latestMetrics = null;
+let latestEval = { grade:'A', title:'良好', detail:'姿勢が安定しています', score:0, completionCount:0 };
 let smoothedAngles = {};
 let csvRows = [];
 let lastCsvAt = 0;
@@ -301,16 +419,21 @@ let recordingTimerHandle = null;
 let recordingUsesComposite = false;
 let captureLoopHandle = null;
 let delegateUsed = 'CPU';
+let lastCompletedPose = null;
+
+const RELIABLE_VIS = 0.35;
+const TRACKED_IDS = [0,11,12,13,14,15,16,23,24,25,26,27,28,31,32];
+const MIRROR_PAIRS = [[11,12],[13,14],[15,16],[23,24],[25,26],[27,28],[31,32]];
 
 const JOINTS = {
-  leftElbow:  { label:'左肘',      a:11,b:13,c:15, anchor:13, tone:'#65f29a' },
-  rightElbow: { label:'右肘',      a:12,b:14,c:16, anchor:14, tone:'#65f29a' },
-  leftKnee:   { label:'左膝',      a:23,b:25,c:27, anchor:25, tone:'#ffd95a' },
-  rightKnee:  { label:'右膝',      a:24,b:26,c:28, anchor:26, tone:'#ffd95a' },
-  leftHip:    { label:'左股関節',  a:11,b:23,c:25, anchor:23, tone:'#53d8ff' },
-  rightHip:   { label:'右股関節',  a:12,b:24,c:26, anchor:24, tone:'#53d8ff' },
-  leftAnkle:  { label:'左足首',    a:25,b:27,c:31, anchor:27, tone:'#c09cff' },
-  rightAnkle: { label:'右足首',    a:26,b:28,c:32, anchor:28, tone:'#c09cff' }
+  leftElbow:  { label:'左肘', a:11,b:13,c:15, anchor:13, tone:'#65f29a' },
+  rightElbow: { label:'右肘', a:12,b:14,c:16, anchor:14, tone:'#65f29a' },
+  leftKnee:   { label:'左膝', a:23,b:25,c:27, anchor:25, tone:'#ffd95a' },
+  rightKnee:  { label:'右膝', a:24,b:26,c:28, anchor:26, tone:'#ffd95a' },
+  leftHip:    { label:'左股関節', a:11,b:23,c:25, anchor:23, tone:'#53d8ff' },
+  rightHip:   { label:'右股関節', a:12,b:24,c:26, anchor:24, tone:'#53d8ff' },
+  leftAnkle:  { label:'左足首', a:25,b:27,c:31, anchor:27, tone:'#b89cff' },
+  rightAnkle: { label:'右足首', a:26,b:28,c:32, anchor:28, tone:'#b89cff' }
 };
 
 const CONNECTIONS = [
@@ -321,7 +444,7 @@ const CONNECTIONS = [
   [23,25],[25,27],[27,31],
   [24,26],[26,28],[28,32]
 ];
-const DRAW_POINTS = new Set([0,11,12,13,14,15,16,23,24,25,26,27,28,31,32]);
+const DRAW_POINTS = new Set(TRACKED_IDS);
 
 function showToast(message, ms=2200){
   clearTimeout(toastTimer);
@@ -331,32 +454,36 @@ function showToast(message, ms=2200){
 }
 
 function setLive(state, text){
-  liveStatus.classList.toggle('active', state);
+  liveDot.classList.toggle('active', state);
   liveText.textContent = text;
 }
 
-function clamp(v,min,max){ return Math.min(max,Math.max(min,v)); }
-
+function clamp(v, min, max){ return Math.min(max, Math.max(min, v)); }
 function angle3D(a,b,c){
   if(!a||!b||!c) return null;
-  const v1 = {x:a.x-b.x,y:a.y-b.y,z:a.z-b.z};
-  const v2 = {x:c.x-b.x,y:c.y-b.y,z:c.z-b.z};
+  const v1 = {x:a.x-b.x, y:a.y-b.y, z:a.z-b.z};
+  const v2 = {x:c.x-b.x, y:c.y-b.y, z:c.z-b.z};
   const n1 = Math.hypot(v1.x,v1.y,v1.z);
   const n2 = Math.hypot(v2.x,v2.y,v2.z);
   if(n1 < 1e-8 || n2 < 1e-8) return null;
-  const cos = clamp((v1.x*v2.x + v1.y*v2.y + v1.z*v2.z)/(n1*n2),-1,1);
+  const cos = clamp((v1.x*v2.x + v1.y*v2.y + v1.z*v2.z)/(n1*n2), -1, 1);
   return Math.acos(cos) * 180 / Math.PI;
 }
-
-function enoughVisibility(points, ids, threshold=.35){
-  return ids.every(i => !points[i] || points[i].visibility == null || points[i].visibility >= threshold);
+function angleBetween(v1,v2){
+  const n1 = Math.hypot(v1.x,v1.y,v1.z), n2 = Math.hypot(v2.x,v2.y,v2.z);
+  if(n1 < 1e-8 || n2 < 1e-8) return null;
+  const cos = clamp((v1.x*v2.x + v1.y*v2.y + v1.z*v2.z)/(n1*n2), -1, 1);
+  return Math.acos(cos) * 180 / Math.PI;
 }
+function vec(a,b){ return {x:b.x-a.x, y:b.y-a.y, z:b.z-a.z}; }
+function midpoint(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2, z:(a.z+b.z)/2}; }
+function isReliable(lm){ return !!lm && (lm.visibility == null || lm.visibility >= RELIABLE_VIS); }
+function cloneLandmark(lm){ return lm ? {x:lm.x, y:lm.y, z:lm.z, visibility:lm.visibility, presence:lm.presence} : null; }
 
 function computeAngles(world){
   const result = {};
-  for(const [key,j] of Object.entries(JOINTS)){
-    if(!enoughVisibility(world,[j.a,j.b,j.c])){ result[key]=null; continue; }
-    result[key] = angle3D(world[j.a],world[j.b],world[j.c]);
+  for(const [key, j] of Object.entries(JOINTS)){
+    result[key] = angle3D(world[j.a], world[j.b], world[j.c]);
   }
   return result;
 }
@@ -364,134 +491,324 @@ function computeAngles(world){
 function smoothAngles(raw){
   const out = {};
   for(const [key,val] of Object.entries(raw)){
-    if(val == null || !Number.isFinite(val)){ out[key]=null; continue; }
+    if(val == null || !Number.isFinite(val)){ out[key] = null; continue; }
     const prev = smoothedAngles[key];
-    const next = prev == null ? val : prev + smoothAlpha*(val-prev);
+    const next = prev == null ? val : prev + smoothAlpha * (val - prev);
     smoothedAngles[key] = next;
     out[key] = next;
   }
   return out;
 }
 
+function completePose(landmarks, world, now){
+  const lms = Array.from({length:33}, (_,i)=>cloneLandmark(landmarks?.[i]));
+  const worlds = Array.from({length:33}, (_,i)=>cloneLandmark(world?.[i]));
+  const states = Array.from({length:33}, (_,i)=>(isReliable(landmarks?.[i]) || isReliable(world?.[i])) ? 'real' : 'missing');
+
+  for(const id of TRACKED_IDS){
+    if(states[id] === 'real') continue;
+    if(lastCompletedPose && now - lastCompletedPose.time < 450 && lastCompletedPose.landmarks[id] && lastCompletedPose.world[id]){
+      lms[id] = cloneLandmark(lastCompletedPose.landmarks[id]);
+      worlds[id] = cloneLandmark(lastCompletedPose.world[id]);
+      states[id] = 'temporal';
+    }
+  }
+
+  for(const [left, right] of MIRROR_PAIRS){
+    if(states[left] === 'missing' && states[right] !== 'missing' && lms[right] && worlds[right]){
+      lms[left] = { ...cloneLandmark(lms[right]), x:1-lms[right].x };
+      worlds[left] = { ...cloneLandmark(worlds[right]), x:-worlds[right].x };
+      states[left] = 'mirror';
+    }
+    if(states[right] === 'missing' && states[left] !== 'missing' && lms[left] && worlds[left]){
+      lms[right] = { ...cloneLandmark(lms[left]), x:1-lms[left].x };
+      worlds[right] = { ...cloneLandmark(worlds[left]), x:-worlds[left].x };
+      states[right] = 'mirror';
+    }
+  }
+
+  if(states[0] === 'missing' && lastCompletedPose && now - lastCompletedPose.time < 450 && lastCompletedPose.landmarks[0] && lastCompletedPose.world[0]){
+    lms[0] = cloneLandmark(lastCompletedPose.landmarks[0]);
+    worlds[0] = cloneLandmark(lastCompletedPose.world[0]);
+    states[0] = 'temporal';
+  }
+
+  const completionCount = states.filter(s => s === 'temporal' || s === 'mirror').length;
+  const result = { landmarks:lms, world:worlds, states, completionCount };
+  lastCompletedPose = { ...result, time: now };
+  return result;
+}
+
+function trunkLean(world){
+  if(!world[11] || !world[12] || !world[23] || !world[24]) return null;
+  const shoulderMid = midpoint(world[11], world[12]);
+  const hipMid = midpoint(world[23], world[24]);
+  const trunk = vec(hipMid, shoulderMid);
+  return angleBetween(trunk, {x:0, y:-1, z:0});
+}
+function armRaise(world, side){
+  const s = side === 'left' ? 11 : 12;
+  const e = side === 'left' ? 13 : 14;
+  const h = side === 'left' ? 23 : 24;
+  if(!world[s] || !world[e] || !world[h]) return null;
+  return angleBetween(vec(world[s], world[e]), vec(world[s], world[h]));
+}
+function kneeFlex(angles, side){
+  const key = side === 'left' ? 'leftKnee' : 'rightKnee';
+  return angles[key] == null ? null : Math.max(0, 180 - angles[key]);
+}
+
+function evaluateWork(angles, world, completionCount){
+  const metrics = {
+    trunkLean: trunkLean(world),
+    leftArmRaise: armRaise(world, 'left'),
+    rightArmRaise: armRaise(world, 'right'),
+    leftKneeFlex: kneeFlex(angles, 'left'),
+    rightKneeFlex: kneeFlex(angles, 'right')
+  };
+  metrics.maxArmRaise = Math.max(metrics.leftArmRaise ?? 0, metrics.rightArmRaise ?? 0);
+  metrics.maxKneeFlex = Math.max(metrics.leftKneeFlex ?? 0, metrics.rightKneeFlex ?? 0);
+
+  let score = 0;
+  const reasons = [];
+
+  if(metrics.trunkLean != null){
+    if(metrics.trunkLean > 40){ score += 3; reasons.push('体幹前傾が大きい'); }
+    else if(metrics.trunkLean > 20){ score += 1; reasons.push('体幹がやや前傾'); }
+  }
+
+  if(metrics.maxArmRaise > 90){ score += 2; reasons.push('腕上げ姿勢が大きい'); }
+  else if(metrics.maxArmRaise > 45){ score += 1; reasons.push('腕上げ姿勢あり'); }
+
+  const elbows = [angles.leftElbow, angles.rightElbow].filter(v => v != null);
+  if(elbows.some(v => v < 60 || v > 140)){ score += 1; reasons.push('肘角度に偏り'); }
+
+  if(metrics.maxKneeFlex > 75){ score += 2; reasons.push('膝の深い屈曲'); }
+  else if(metrics.maxKneeFlex > 35){ score += 1; reasons.push('膝屈曲あり'); }
+
+  const asym = Math.abs((metrics.leftArmRaise ?? 0) - (metrics.rightArmRaise ?? 0));
+  if(asym > 20){ score += 1; reasons.push('左右差あり'); }
+
+  if(completionCount >= 6){ score += 1; reasons.push('見切れが多く推定補完中'); }
+  else if(completionCount > 0){ reasons.push('一部ランドマークを補完'); }
+
+  let grade = 'A', title = '良好';
+  if(score <= 1){ grade = 'A'; title = '良好'; }
+  else if(score <= 3){ grade = 'B'; title = '注意'; }
+  else if(score <= 5){ grade = 'C'; title = '改善推奨'; }
+  else { grade = 'D'; title = '高負荷'; }
+
+  const detail = reasons.length ? reasons.slice(0,2).join(' / ') : '姿勢が安定しています';
+  return { grade, title, detail, score, completionCount, metrics };
+}
+
+function gradeClass(g){ return `grade-${g}`; }
+
 function updateAngleCards(angles){
-  document.querySelectorAll('[data-angle]').forEach(el=>{
+  document.querySelectorAll('[data-angle]').forEach(el => {
     const key = el.dataset.angle;
     const v = angles[key];
-    el.innerHTML = `${v==null?'--':Math.round(v)}<small>°</small>`;
+    el.innerHTML = `${v == null ? '--' : Math.round(v)}<small>°</small>`;
   });
+  document.querySelectorAll('[data-angle-detail]').forEach(el => {
+    const key = el.dataset.angleDetail;
+    const v = angles[key];
+    el.textContent = `${v == null ? '--' : Math.round(v)}°`;
+  });
+}
+
+function updateEvaluationUI(evaluation){
+  latestEval = evaluation;
+  const targets = [evalMark, evalBarMark, detailEvalMark];
+  targets.forEach(el => { el.className = `gradeMark ${gradeClass(evaluation.grade)}`; el.textContent = evaluation.grade; });
+  evalShort.textContent = evaluation.title;
+  evalBarTitle.textContent = `作業評価：${evaluation.title}`;
+  evalBarSub.textContent = evaluation.detail;
+  detailEvalTitle.textContent = `${evaluation.title}（スコア ${evaluation.score}）`;
+  detailEvalSub.textContent = `${evaluation.detail}。補完ランドマーク ${evaluation.completionCount} 点。`;
+
+  const m = evaluation.metrics || {};
+  document.getElementById('metricTrunk').textContent = m.trunkLean == null ? '--°' : `${Math.round(m.trunkLean)}°`;
+  document.getElementById('metricArm').textContent = m.maxArmRaise == null ? '--°' : `${Math.round(m.maxArmRaise)}°`;
+  document.getElementById('metricKnee').textContent = m.maxKneeFlex == null ? '--°' : `${Math.round(m.maxKneeFlex)}°`;
+  document.getElementById('metricCompletion').textContent = String(evaluation.completionCount ?? 0);
 }
 
 function resizeOverlay(){
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.max(1, overlay.clientWidth);
   const h = Math.max(1, overlay.clientHeight);
-  overlay.width = Math.round(w*dpr);
-  overlay.height = Math.round(h*dpr);
+  overlay.width = Math.round(w * dpr);
+  overlay.height = Math.round(h * dpr);
   octx.setTransform(dpr,0,0,dpr,0,0);
 }
-
-function coverTransform(srcW,srcH,dstW,dstH){
-  const scale = Math.max(dstW/srcW,dstH/srcH);
-  return {scale, ox:(dstW-srcW*scale)/2, oy:(dstH-srcH*scale)/2};
+function coverTransform(srcW, srcH, dstW, dstH){
+  const scale = Math.max(dstW / srcW, dstH / srcH);
+  return { scale, ox:(dstW - srcW * scale) / 2, oy:(dstH - srcH * scale) / 2 };
 }
-
-function mapPoint(lm, dstW=overlay.clientWidth, dstH=overlay.clientHeight){
-  const sw = video.videoWidth || dstW;
-  const sh = video.videoHeight || dstH;
-  const t = coverTransform(sw,sh,dstW,dstH);
-  return {x:lm.x*sw*t.scale+t.ox, y:lm.y*sh*t.scale+t.oy};
+function mapPointForSize(lm, dstW, dstH){
+  const sw = video.videoWidth || dstW, sh = video.videoHeight || dstH;
+  const t = coverTransform(sw, sh, dstW, dstH);
+  return { x:lm.x * sw * t.scale + t.ox, y:lm.y * sh * t.scale + t.oy };
 }
-
-function visible(lm){ return !lm || lm.visibility == null || lm.visibility > .3; }
-
 function roundedRect(ctx,x,y,w,h,r){
-  const rr=Math.min(r,w/2,h/2);
-  ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
 }
 
-function drawPose(ctx, landmarks, angles, dstW, dstH, opts={}){
-  if(!landmarks?.length) return;
+function drawPose(ctx, pose, angles, dstW, dstH, opts={}){
+  if(!pose?.landmarks?.length) return;
+  const lms = pose.landmarks;
+  const states = pose.states || [];
+  const map = lm => mapPointForSize(lm, dstW, dstH);
   const stroke = opts.stroke || '#53d8ff';
   const lineWidth = opts.lineWidth || 3;
-  const pointR = opts.pointR || 4.5;
-  const map = lm => mapPointForSize(lm,dstW,dstH);
+  const pointR = opts.pointR || 4.2;
 
   if(showSkeleton){
     ctx.save();
-    ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.shadowColor='rgba(47,186,255,.42)';ctx.shadowBlur=8;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     for(const [a,b] of CONNECTIONS){
-      const la=landmarks[a], lb=landmarks[b]; if(!visible(la)||!visible(lb)) continue;
-      const p1=map(la), p2=map(lb);ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+      if(!lms[a] || !lms[b]) continue;
+      const p1 = map(lms[a]), p2 = map(lms[b]);
+      const real = states[a] === 'real' && states[b] === 'real';
+      ctx.beginPath();
+      ctx.setLineDash(real ? [] : [6,6]);
+      ctx.strokeStyle = real ? stroke : 'rgba(83,216,255,.48)';
+      ctx.lineWidth = lineWidth;
+      ctx.shadowColor = real ? 'rgba(47,186,255,.38)' : 'transparent';
+      ctx.shadowBlur = real ? 7 : 0;
+      ctx.moveTo(p1.x,p1.y);
+      ctx.lineTo(p2.x,p2.y);
+      ctx.stroke();
     }
-    ctx.shadowBlur=0;
-    for(let i=0;i<landmarks.length;i++){
-      const lm=landmarks[i]; if(!visible(lm)) continue;
-      if(!DRAW_POINTS.has(i)) continue;
-      const p=map(lm);ctx.beginPath();ctx.fillStyle=(i===23||i===24)?'#4f8cff':'#f7fbff';ctx.strokeStyle='#3bbcff';ctx.lineWidth=2;ctx.arc(p.x,p.y,pointR,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+    for(let i=0;i<lms.length;i++){
+      if(!lms[i] || !DRAW_POINTS.has(i)) continue;
+      const p = map(lms[i]);
+      const state = states[i];
+      ctx.beginPath();
+      ctx.fillStyle = (i===23||i===24) ? '#4f8cff' : '#ffffff';
+      ctx.globalAlpha = state === 'real' ? 0.98 : 0.45;
+      ctx.strokeStyle = state === 'real' ? '#3bbcff' : 'rgba(83,216,255,.55)';
+      ctx.lineWidth = 2;
+      ctx.arc(p.x, p.y, pointR, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     ctx.restore();
   }
 
   if(showLabels){
     ctx.save();
-    ctx.font=`700 ${opts.fontSize||12}px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
-    ctx.textBaseline='middle';
-    const keys=['leftElbow','rightElbow','leftKnee','rightKnee','leftHip','rightHip'];
+    ctx.font = `800 ${opts.fontSize || 11}px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
+    ctx.textBaseline = 'middle';
+    const keys = ['leftElbow','rightElbow','leftKnee','rightKnee','leftHip','rightHip'];
     for(const key of keys){
-      const j=JOINTS[key], v=angles[key], lm=landmarks[j.anchor];
-      if(v==null||!visible(lm)) continue;
-      const p=map(lm);
-      const txt=`${j.label} ${Math.round(v)}°`;
-      const tw=ctx.measureText(txt).width;
-      const padX=9,h=28,w=tw+padX*2;
-      const leftSide=key.startsWith('left');
-      let x=p.x+(leftSide?-w-16:16), y=p.y-h/2;
-      x=clamp(x,8,dstW-w-8); y=clamp(y,82,dstH-h-150);
-      roundedRect(ctx,x,y,w,h,9);ctx.fillStyle='rgba(7,14,22,.78)';ctx.fill();ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=1;ctx.stroke();
-      ctx.fillStyle='#fff';ctx.fillText(txt,x+padX,y+h/2);
-      ctx.beginPath();ctx.strokeStyle=j.tone;ctx.lineWidth=3;ctx.arc(p.x,p.y,10,-.85,.85);ctx.stroke();
+      const j = JOINTS[key], v = angles[key], lm = lms[j.anchor];
+      if(v == null || !lm) continue;
+      const p = map(lm);
+      const txt = `${Math.round(v)}°`;
+      const tw = ctx.measureText(txt).width;
+      const padX = 7, h = 22, w = tw + padX * 2;
+      const leftSide = key.startsWith('left');
+      let x = p.x + (leftSide ? -w - 13 : 13), y = p.y - h/2;
+      x = clamp(x, 8, dstW - w - 8);
+      y = clamp(y, 74, dstH - h - 108);
+      roundedRect(ctx, x, y, w, h, 8);
+      ctx.fillStyle = 'rgba(6,12,19,.68)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(txt, x + padX, y + h/2);
     }
     ctx.restore();
   }
 }
 
-function mapPointForSize(lm,dstW,dstH){
-  const sw=video.videoWidth||dstW, sh=video.videoHeight||dstH;
-  const t=coverTransform(sw,sh,dstW,dstH);
-  return {x:lm.x*sw*t.scale+t.ox, y:lm.y*sh*t.scale+t.oy};
-}
-
 function drawOverlay(){
-  const w=overlay.clientWidth,h=overlay.clientHeight;
+  const w = overlay.clientWidth, h = overlay.clientHeight;
   octx.clearRect(0,0,w,h);
-  if(lastResult?.landmarks?.[0]) drawPose(octx,lastResult.landmarks[0],latestAngles,w,h);
+  if(lastResult?.pose) drawPose(octx, lastResult.pose, latestAngles, w, h);
 }
 
 function drawVideoCover(ctx,w,h){
-  const sw=video.videoWidth, sh=video.videoHeight;
-  if(!sw||!sh) return;
-  const t=coverTransform(sw,sh,w,h);
-  ctx.drawImage(video,t.ox,t.oy,sw*t.scale,sh*t.scale);
-}
-
-function drawCaptureFrame(){
-  const w=captureCanvas.width,h=captureCanvas.height;
-  cctx.clearRect(0,0,w,h);
-  drawVideoCover(cctx,w,h);
-  const grad=cctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'rgba(0,0,0,.20)');grad.addColorStop(.62,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.40)');cctx.fillStyle=grad;cctx.fillRect(0,0,w,h);
-  if(lastResult?.landmarks?.[0]) drawPose(cctx,lastResult.landmarks[0],latestAngles,w,h,{lineWidth:Math.max(3,w/300),pointR:Math.max(4,w/220),fontSize:Math.max(12,w/60)});
-  cctx.save();cctx.fillStyle='rgba(5,11,17,.70)';roundedRect(cctx,24,24,Math.min(360,w-48),48,15);cctx.fill();cctx.font=`800 ${Math.max(15,w/45)}px -apple-system,sans-serif`;cctx.fillStyle='#65f29a';cctx.textBaseline='middle';cctx.fillText('● 3D POSE ANALYSIS',42,48);cctx.restore();
+  const sw = video.videoWidth, sh = video.videoHeight;
+  if(!sw || !sh) return;
+  const t = coverTransform(sw, sh, w, h);
+  ctx.drawImage(video, t.ox, t.oy, sw * t.scale, sh * t.scale);
 }
 
 function configureCaptureCanvas(){
-  const ratio = innerWidth/innerHeight;
-  if(ratio < 1){ captureCanvas.width=720; captureCanvas.height=Math.round(720/ratio); }
-  else{ captureCanvas.height=720; captureCanvas.width=Math.round(720*ratio); }
-  if(captureCanvas.height>1280){captureCanvas.height=1280;captureCanvas.width=Math.round(1280*ratio)}
+  const ratio = innerWidth / innerHeight;
+  if(ratio < 1){
+    captureCanvas.width = 720;
+    captureCanvas.height = Math.round(720 / ratio);
+  }else{
+    captureCanvas.height = 720;
+    captureCanvas.width = Math.round(720 * ratio);
+  }
+  if(captureCanvas.height > 1280){
+    captureCanvas.height = 1280;
+    captureCanvas.width = Math.round(1280 * ratio);
+  }
+}
+
+function drawCaptureFrame(){
+  const w = captureCanvas.width, h = captureCanvas.height;
+  cctx.clearRect(0,0,w,h);
+  drawVideoCover(cctx, w, h);
+  const grad = cctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(0,0,0,.16)');
+  grad.addColorStop(.65,'rgba(0,0,0,0)');
+  grad.addColorStop(1,'rgba(0,0,0,.34)');
+  cctx.fillStyle = grad;
+  cctx.fillRect(0,0,w,h);
+  if(lastResult?.pose) drawPose(cctx, lastResult.pose, latestAngles, w, h, {lineWidth:Math.max(3,w/300), pointR:Math.max(4,w/240), fontSize:Math.max(11,w/68)});
+
+  // compact header
+  cctx.save();
+  roundedRect(cctx, 20, 20, Math.min(260, w-40), 40, 14);
+  cctx.fillStyle = 'rgba(5,11,17,.64)';
+  cctx.fill();
+  cctx.font = `800 ${Math.max(15,w/50)}px -apple-system,sans-serif`;
+  cctx.fillStyle = '#ffffff';
+  cctx.textBaseline = 'middle';
+  cctx.fillText('作業姿勢解析', 36, 40);
+  cctx.restore();
+
+  // evaluation badge
+  cctx.save();
+  const badgeW = 180, bx = w - badgeW - 20, by = 20;
+  roundedRect(cctx, bx, by, badgeW, 40, 14);
+  cctx.fillStyle = 'rgba(5,11,17,.64)';
+  cctx.fill();
+  const gradeColors = {A:'#65f29a', B:'#ffd95a', C:'#ff9f43', D:'#ff4d4f'};
+  cctx.fillStyle = gradeColors[latestEval.grade] || '#65f29a';
+  roundedRect(cctx, bx+10, by+8, 26, 24, 9);
+  cctx.fill();
+  cctx.fillStyle = latestEval.grade === 'D' ? '#fff' : '#071018';
+  cctx.font = `900 ${Math.max(12,w/70)}px -apple-system,sans-serif`;
+  cctx.fillText(latestEval.grade, bx+18, by+20);
+  cctx.fillStyle = '#ffffff';
+  cctx.font = `800 ${Math.max(13,w/64)}px -apple-system,sans-serif`;
+  cctx.fillText(`評価 ${latestEval.title}`, bx+46, by+20);
+  cctx.restore();
 }
 
 async function initLandmarker(){
-  startupStatus.textContent='AIモデルを読み込み中…';
+  startupStatus.textContent = 'モデル読み込み中…';
   const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
   const common = {
     runningMode:'VIDEO', numPoses:1,
@@ -503,24 +820,28 @@ async function initLandmarker(){
   let lastErr;
   for(const delegate of ['GPU','CPU']){
     try{
-      landmarker = await PoseLandmarker.createFromOptions(fileset,{...common,baseOptions:{modelAssetPath:MODEL_URL,delegate}});
-      delegateUsed=delegate; return;
-    }catch(e){ lastErr=e; console.warn(`MediaPipe ${delegate} delegate failed`,e); }
+      landmarker = await PoseLandmarker.createFromOptions(fileset, { ...common, baseOptions:{ modelAssetPath:MODEL_URL, delegate } });
+      delegateUsed = delegate;
+      return;
+    }catch(e){
+      lastErr = e;
+      console.warn(`MediaPipe ${delegate} delegate failed`, e);
+    }
   }
   throw lastErr || new Error('MediaPipeの初期化に失敗しました');
 }
 
 async function startCamera(){
-  if(!window.isSecureContext && location.hostname!=='localhost' && location.hostname!=='127.0.0.1'){
+  if(!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1'){
     throw new Error('スマホのカメラ利用にはHTTPSでページを開く必要があります。');
   }
   if(!navigator.mediaDevices?.getUserMedia) throw new Error('このブラウザはカメラAPIに対応していません。');
-  startupStatus.textContent='背面カメラを起動中…';
+  startupStatus.textContent = '背面カメラ起動中…';
   cameraStream = await navigator.mediaDevices.getUserMedia({
     audio:false,
     video:{ facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:30,max:60} }
   });
-  video.srcObject=cameraStream;
+  video.srcObject = cameraStream;
   await video.play();
   configureCaptureCanvas();
   resizeOverlay();
@@ -528,36 +849,44 @@ async function startCamera(){
 
 async function startApp(){
   if(running) return;
-  startBtn.disabled=true;
+  startBtn.disabled = true;
   try{
     if(!landmarker) await initLandmarker();
     await startCamera();
-    running=true;
-    csvRows=[];smoothedAngles={};lastVideoTime=-1;lastInferenceStamp=-1;lastCsvAt=0;sessionStartedAt=performance.now();
+    running = true;
+    csvRows = [];
+    smoothedAngles = {};
+    lastCompletedPose = null;
+    lastVideoTime = -1;
+    lastInferenceStamp = -1;
+    lastCsvAt = 0;
+    sessionStartedAt = performance.now();
     startup.classList.add('hide');
-    setLive(true,'LIVE 解析中');
+    setLive(true, '解析中');
+    document.getElementById('poseModeText').textContent = `3D World ・ ${delegateUsed}`;
     showToast(`MediaPipe起動完了（${delegateUsed}）`);
     requestAnimationFrame(predictLoop);
   }catch(err){
     console.error(err);
-    startupStatus.textContent=err?.message||'起動に失敗しました。';
-    startBtn.disabled=false;
-    setLive(false,'起動エラー');
+    startupStatus.textContent = err?.message || '起動に失敗しました。';
+    startBtn.disabled = false;
+    setLive(false, '起動エラー');
   }
 }
 
 function nextTimestamp(){
-  let t=Math.round(performance.now());
-  if(t<=lastInferenceStamp) t=lastInferenceStamp+1;
-  lastInferenceStamp=t;return t;
+  let t = Math.round(performance.now());
+  if(t <= lastInferenceStamp) t = lastInferenceStamp + 1;
+  lastInferenceStamp = t;
+  return t;
 }
 
-function maybeRecordCsv(now, world, angles){
-  if(now-lastCsvAt<csvInterval) return;
-  lastCsvAt=now;
-  const row={
+function maybeRecordCsv(now, world, angles, evaluation){
+  if(now - lastCsvAt < csvInterval) return;
+  lastCsvAt = now;
+  csvRows.push({
     iso_time:new Date().toISOString(),
-    elapsed_ms:Math.round(now-sessionStartedAt),
+    elapsed_ms:Math.round(now - sessionStartedAt),
     left_elbow:angles.leftElbow,
     right_elbow:angles.rightElbow,
     left_knee:angles.leftKnee,
@@ -565,132 +894,208 @@ function maybeRecordCsv(now, world, angles){
     left_hip:angles.leftHip,
     right_hip:angles.rightHip,
     left_ankle:angles.leftAnkle,
-    right_ankle:angles.rightAnkle
-  };
-  // 必要なら後から33点のworld座標をCSVへ追加しやすいよう、ここでworldも取得済み。
-  csvRows.push(row);
-  if(csvRows.length>72000) csvRows.splice(0,1000);
+    right_ankle:angles.rightAnkle,
+    trunk_lean:evaluation.metrics?.trunkLean,
+    max_arm_raise:evaluation.metrics?.maxArmRaise,
+    max_knee_flex:evaluation.metrics?.maxKneeFlex,
+    work_grade:evaluation.grade,
+    work_score:evaluation.score,
+    completion_count:evaluation.completionCount
+  });
+  if(csvRows.length > 72000) csvRows.splice(0,1000);
 }
 
 function updateFps(now){
   frames++;
-  if(now-fpsStarted>=1000){fps=Math.round(frames*1000/(now-fpsStarted));frames=0;fpsStarted=now;fpsText.textContent=`${fps} FPS ・ ${delegateUsed} ・ 度(°)`;}
+  if(now - fpsStarted >= 1000){
+    fps = Math.round(frames * 1000 / (now - fpsStarted));
+    frames = 0;
+    fpsStarted = now;
+    fpsText.textContent = `${fps} FPS`;
+  }
 }
 
 function predictLoop(now){
   if(!running) return;
   try{
-    if(video.readyState>=2 && video.currentTime!==lastVideoTime){
-      const result=landmarker.detectForVideo(video,nextTimestamp());
-      lastVideoTime=video.currentTime;
-      lastResult=result;
+    if(video.readyState >= 2 && video.currentTime !== lastVideoTime){
+      const result = landmarker.detectForVideo(video, nextTimestamp());
+      lastVideoTime = video.currentTime;
       if(result?.landmarks?.length && result?.worldLandmarks?.length){
-        lastPoseSeenAt=now;
-        const raw=computeAngles(result.worldLandmarks[0]);
-        latestAngles=smoothAngles(raw);
+        lastPoseSeenAt = now;
+        const pose = completePose(result.landmarks[0], result.worldLandmarks[0], now);
+        const rawAngles = computeAngles(pose.world);
+        latestAngles = smoothAngles(rawAngles);
+        latestMetrics = evaluateWork(latestAngles, pose.world, pose.completionCount);
         updateAngleCards(latestAngles);
-        maybeRecordCsv(now,result.worldLandmarks[0],latestAngles);
+        updateEvaluationUI(latestMetrics);
+        maybeRecordCsv(now, pose.world, latestAngles, latestMetrics);
+        lastResult = { pose };
         noPoseHint.classList.remove('show');
       }else{
-        if(now-lastPoseSeenAt>700) noPoseHint.classList.add('show');
+        if(now - lastPoseSeenAt > 700) noPoseHint.classList.add('show');
       }
       drawOverlay();
       updateFps(now);
     }
-  }catch(e){console.error('Pose inference error',e);}
+  }catch(e){
+    console.error('Pose inference error', e);
+  }
   requestAnimationFrame(predictLoop);
 }
 
 function downloadBlob(blob, filename){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
-function stamp(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;}
+function stamp(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
 
 async function takePhoto(){
-  if(!running){showToast('先にカメラを開始してください');return;}
-  configureCaptureCanvas();drawCaptureFrame();
-  captureCanvas.toBlob(blob=>{
-    if(!blob){showToast('写真の作成に失敗しました');return;}
-    downloadBlob(blob,`pose_${stamp()}.jpg`);showToast('解析付き写真を保存しました');
-  },'image/jpeg',.92);
+  if(!running){ showToast('先に解析を開始してください'); return; }
+  configureCaptureCanvas();
+  drawCaptureFrame();
+  captureCanvas.toBlob(blob => {
+    if(!blob){ showToast('写真の作成に失敗しました'); return; }
+    downloadBlob(blob, `posture_${stamp()}.jpg`);
+    showToast('解析付き写真を保存しました');
+  }, 'image/jpeg', .92);
 }
 
 function chooseMime(){
-  if(typeof MediaRecorder==='undefined') return '';
-  const candidates=['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
-  return candidates.find(t=>MediaRecorder.isTypeSupported?.(t))||'';
+  if(typeof MediaRecorder === 'undefined') return '';
+  const candidates = ['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  return candidates.find(t => MediaRecorder.isTypeSupported?.(t)) || '';
 }
-
 function beginCaptureLoop(){
-  const tick=()=>{if(!mediaRecorder||mediaRecorder.state!=='recording')return;drawCaptureFrame();captureLoopHandle=requestAnimationFrame(tick)};tick();
+  const tick = () => {
+    if(!mediaRecorder || mediaRecorder.state !== 'recording') return;
+    drawCaptureFrame();
+    captureLoopHandle = requestAnimationFrame(tick);
+  };
+  tick();
 }
-function stopCaptureLoop(){if(captureLoopHandle)cancelAnimationFrame(captureLoopHandle);captureLoopHandle=null;}
-
+function stopCaptureLoop(){
+  if(captureLoopHandle) cancelAnimationFrame(captureLoopHandle);
+  captureLoopHandle = null;
+}
+function updateTimer(){
+  const sec = Math.max(0, Math.floor((performance.now() - recordingStartedAt) / 1000));
+  timerText.textContent = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+}
 function startRecording(){
-  if(!running){showToast('先にカメラを開始してください');return;}
-  if(typeof MediaRecorder==='undefined'){showToast('このブラウザは動画録画に対応していません');return;}
-  recordedChunks=[];configureCaptureCanvas();drawCaptureFrame();
+  if(!running){ showToast('先に解析を開始してください'); return; }
+  if(typeof MediaRecorder === 'undefined'){ showToast('このブラウザは動画録画に対応していません'); return; }
+  recordedChunks = [];
+  configureCaptureCanvas();
+  drawCaptureFrame();
   let stream;
-  recordingUsesComposite=typeof captureCanvas.captureStream==='function';
-  if(recordingUsesComposite){stream=captureCanvas.captureStream(30);}else{stream=cameraStream;}
-  const mime=chooseMime();
-  try{mediaRecorder=mime?new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5_000_000}):new MediaRecorder(stream);}catch(e){mediaRecorder=new MediaRecorder(stream);}
-  mediaRecorder.ondataavailable=e=>{if(e.data?.size)recordedChunks.push(e.data)};
-  mediaRecorder.onstop=()=>{
+  recordingUsesComposite = typeof captureCanvas.captureStream === 'function';
+  stream = recordingUsesComposite ? captureCanvas.captureStream(30) : cameraStream;
+  const mime = chooseMime();
+  try{
+    mediaRecorder = mime ? new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond:5_000_000 }) : new MediaRecorder(stream);
+  }catch(e){
+    mediaRecorder = new MediaRecorder(stream);
+  }
+  mediaRecorder.ondataavailable = e => { if(e.data?.size) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
     stopCaptureLoop();
-    const type=mediaRecorder.mimeType||mime||'video/webm';
-    const ext=type.includes('mp4')?'mp4':'webm';
-    const blob=new Blob(recordedChunks,{type});downloadBlob(blob,`pose_${stamp()}.${ext}`);
-    showToast(recordingUsesComposite?'解析付き動画を保存しました':'動画を保存しました（このブラウザでは合成録画非対応）',3200);
-    mediaRecorder=null;
+    const type = mediaRecorder.mimeType || mime || 'video/webm';
+    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    downloadBlob(new Blob(recordedChunks, {type}), `posture_${stamp()}.${ext}`);
+    showToast(recordingUsesComposite ? '解析付き動画を保存しました' : '動画を保存しました（合成録画非対応ブラウザ）', 3200);
+    mediaRecorder = null;
   };
   mediaRecorder.start(1000);
-  if(recordingUsesComposite)beginCaptureLoop();
-  recordingStartedAt=performance.now();recordBtn.classList.add('recording');recordLabel.textContent='停止';recordTimer.classList.add('visible');updateTimer();recordingTimerHandle=setInterval(updateTimer,250);
+  if(recordingUsesComposite) beginCaptureLoop();
+  recordingStartedAt = performance.now();
+  recordBtn.classList.add('recording');
+  recordLabel.textContent = '停止';
+  recordTimer.classList.add('visible');
+  updateTimer();
+  recordingTimerHandle = setInterval(updateTimer, 250);
 }
-
 function stopRecording(){
-  if(!mediaRecorder||mediaRecorder.state==='inactive')return;
-  mediaRecorder.stop();clearInterval(recordingTimerHandle);recordingTimerHandle=null;recordBtn.classList.remove('recording');recordLabel.textContent='録画';recordTimer.classList.remove('visible');
+  if(!mediaRecorder || mediaRecorder.state === 'inactive') return;
+  mediaRecorder.stop();
+  clearInterval(recordingTimerHandle);
+  recordingTimerHandle = null;
+  recordBtn.classList.remove('recording');
+  recordLabel.textContent = '録画';
+  recordTimer.classList.remove('visible');
 }
-function updateTimer(){const sec=Math.max(0,Math.floor((performance.now()-recordingStartedAt)/1000));timerText.textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}
 
 function exportCsv(){
-  if(!csvRows.length){showToast('まだ計測データがありません');return;}
-  const headers=['iso_time','elapsed_ms','left_elbow_deg','right_elbow_deg','left_knee_deg','right_knee_deg','left_hip_deg','right_hip_deg','left_ankle_deg','right_ankle_deg'];
-  const f=v=>v==null?'':Number(v).toFixed(2);
-  const lines=[headers.join(','),...csvRows.map(r=>[
-    r.iso_time,r.elapsed_ms,f(r.left_elbow),f(r.right_elbow),f(r.left_knee),f(r.right_knee),f(r.left_hip),f(r.right_hip),f(r.left_ankle),f(r.right_ankle)
+  if(!csvRows.length){ showToast('まだ計測データがありません'); return; }
+  const headers = ['iso_time','elapsed_ms','left_elbow_deg','right_elbow_deg','left_knee_deg','right_knee_deg','left_hip_deg','right_hip_deg','left_ankle_deg','right_ankle_deg','trunk_lean_deg','max_arm_raise_deg','max_knee_flex_deg','work_grade','work_score','completion_count'];
+  const f = v => v == null ? '' : Number(v).toFixed(2);
+  const lines = [headers.join(','), ...csvRows.map(r => [
+    r.iso_time, r.elapsed_ms, f(r.left_elbow), f(r.right_elbow), f(r.left_knee), f(r.right_knee), f(r.left_hip), f(r.right_hip), f(r.left_ankle), f(r.right_ankle), f(r.trunk_lean), f(r.max_arm_raise), f(r.max_knee_flex), r.work_grade, r.work_score, r.completion_count
   ].join(','))];
-  const bom='\uFEFF';downloadBlob(new Blob([bom+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),`pose_angles_${stamp()}.csv`);showToast(`${csvRows.length}件のCSVを保存しました`);
+  downloadBlob(new Blob(['\uFEFF' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'}), `posture_angles_${stamp()}.csv`);
+  showToast(`${csvRows.length}件のCSVを保存しました`);
 }
 
-startBtn.addEventListener('click',startApp);
-photoBtn.addEventListener('click',takePhoto);
-recordBtn.addEventListener('click',()=>mediaRecorder&&mediaRecorder.state==='recording'?stopRecording():startRecording());
-csvBtn.addEventListener('click',exportCsv);
+function openSettings(){ settingsSheet.classList.add('show'); }
+function closeSettingsSheet(){ settingsSheet.classList.remove('show'); }
+function openDetail(){ detailSheet.classList.add('show'); }
+function closeDetailSheet(){ detailSheet.classList.remove('show'); }
 
-skeletonToggle.addEventListener('click',()=>{showSkeleton=!showSkeleton;skeletonToggle.classList.toggle('on',showSkeleton);drawOverlay()});
-labelsToggle.addEventListener('click',()=>{showLabels=!showLabels;labelsToggle.classList.toggle('on',showLabels);statsPanel.classList.toggle('hidden',!showLabels);drawOverlay()});
+startBtn.addEventListener('click', startApp);
+startupSettingsBtn.addEventListener('click', openSettings);
+settingsBtn.addEventListener('click', openSettings);
+menuBtn.addEventListener('click', openSettings);
+closeSettings.addEventListener('click', closeSettingsSheet);
+settingsSheet.addEventListener('click', e => { if(e.target === settingsSheet) closeSettingsSheet(); });
 
-settingsBtn.addEventListener('click',()=>settingsSheet.classList.add('show'));
-closeSettings.addEventListener('click',()=>settingsSheet.classList.remove('show'));
-settingsSheet.addEventListener('click',e=>{if(e.target===settingsSheet)settingsSheet.classList.remove('show')});
+detailBtn.addEventListener('click', openDetail);
+evalBadge.addEventListener('click', openDetail);
+closeDetail.addEventListener('click', closeDetailSheet);
+detailSheet.addEventListener('click', e => { if(e.target === detailSheet) closeDetailSheet(); });
 
-document.getElementById('smoothSeg').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return; smoothAlpha=Number(b.dataset.v); [...b.parentElement.children].forEach(x=>x.classList.toggle('active',x===b));
+photoBtn.addEventListener('click', takePhoto);
+sheetPhotoBtn.addEventListener('click', () => { closeSettingsSheet(); takePhoto(); });
+recordBtn.addEventListener('click', () => mediaRecorder && mediaRecorder.state === 'recording' ? stopRecording() : startRecording());
+sheetCsvBtn.addEventListener('click', () => { closeSettingsSheet(); exportCsv(); });
+
+skeletonToggle.addEventListener('click', () => {
+  showSkeleton = !showSkeleton;
+  skeletonToggle.classList.toggle('on', showSkeleton);
+  drawOverlay();
 });
-document.getElementById('csvSeg').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return; csvInterval=Number(b.dataset.v); [...b.parentElement.children].forEach(x=>x.classList.toggle('active',x===b));
+labelsToggle.addEventListener('click', () => {
+  showLabels = !showLabels;
+  labelsToggle.classList.toggle('on', showLabels);
+  drawOverlay();
 });
 
-addEventListener('resize',()=>{resizeOverlay();configureCaptureCanvas();drawOverlay()});
-addEventListener('orientationchange',()=>setTimeout(()=>{resizeOverlay();configureCaptureCanvas();drawOverlay()},250));
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&mediaRecorder?.state==='recording')stopRecording()});
+document.getElementById('smoothSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  smoothAlpha = Number(b.dataset.v);
+  [...b.parentElement.children].forEach(x => x.classList.toggle('active', x === b));
+});
+document.getElementById('csvSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  csvInterval = Number(b.dataset.v);
+  [...b.parentElement.children].forEach(x => x.classList.toggle('active', x === b));
+});
 
-// UIだけ先に表示し、モデルロードはユーザー操作後に開始してiOSのカメラ権限フローを安定させる。
+addEventListener('resize', () => { resizeOverlay(); configureCaptureCanvas(); drawOverlay(); });
+addEventListener('orientationchange', () => setTimeout(() => { resizeOverlay(); configureCaptureCanvas(); drawOverlay(); }, 250));
+document.addEventListener('visibilitychange', () => { if(document.hidden && mediaRecorder?.state === 'recording') stopRecording(); });
+
 resizeOverlay();
 </script>
 </body>
